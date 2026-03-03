@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ffub — gamer & dev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080a0f;
+      --bg2: #0d1017;
+      --surface: #111620;
+      --border: #2a2d35;
+      --accent: #ffffff;
+      --accent2: #ff3e6c;
+      --accent3: #b8ff3e;
+      --text: #e8edf5;
+      --muted: #5a6478;
+      --mono: 'Space Mono', monospace;
+      --display: 'Bebas Neue', sans-serif;
+      --body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      overflow-x: hidden;
+    }
+
+
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.35;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 2.5rem;
+      z-index: 100;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(8,10,15,0.92);
+      backdrop-filter: blur(12px);
+      border-color: var(--border);
+    }
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 1.8rem;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 0 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Scanline effect */
+    .hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,229,255,0.012) 2px,
+        rgba(0,229,255,0.012) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* Grid bg */
+    .grid-bg {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.35;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
+    }
+
+    /* Glow orb */
+    .glow-orb {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-orb 6s ease-in-out infinite;
+    }
+    @keyframes pulse-orb {
+      0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%,-50%) scale(1.15); opacity: 0.6; }
+    }
+
+    .hero-inner {
+      position: relative; z-index: 2;
+      max-width: 1100px;
+    }
+
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+    }
+
+    .hero-name {
+      font-family: var(--display);
+      font-size: clamp(6rem, 16vw, 14rem);
+      line-height: 0.9;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      opacity: 0;
+      animation: fadeUp 0.7s 0.35s forwards;
+    }
+    .hero-name span { color: var(--accent); }
+
+    .hero-sub {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 1.8rem;
+      max-width: 420px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.55s forwards;
+    }
+
+    .hero-ctas {
+      display: flex; gap: 1rem;
+      margin-top: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.7s forwards;
+    }
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.75rem 1.8rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      background: white;
+      transform: translateY(-2px);
+    }
+    .btn-ghost {
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-ghost:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .hero-scroll {
+      position: absolute; bottom: 2.5rem; left: 2.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase;
+      opacity: 0; animation: fadeUp 0.7s 1s forwards;
+    }
+    .scroll-line {
+      width: 40px; height: 1px;
+      background: var(--muted);
+      animation: scroll-pulse 2s ease-in-out infinite;
+    }
+    @keyframes scroll-pulse {
+      0%,100% { width: 40px; } 50% { width: 20px; }
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      position: absolute; bottom: 2.5rem; right: 2.5rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--muted); letter-spacing: 0.08em;
+      opacity: 0; animation: fadeUp 0.7s 1.1s forwards;
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent3);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SECTION BASE */
+    section {
+      padding: 7rem 2.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1; max-width: 60px;
+      height: 1px; background: var(--accent); opacity: 0.4;
+    }
+
+    .section-title {
+      font-family: var(--display);
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: 1;
+      margin-bottom: 3rem;
+    }
+
+    /* ABOUT */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    .about-text p {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: #8a96aa;
+      margin-bottom: 1.2rem;
+    }
+    .about-text p strong { color: var(--text); font-weight: 500; }
+
+    .about-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .stat-block {
+      background: var(--bg2);
+      padding: 1.5rem;
+      transition: background 0.2s;
+    }
+    .stat-block:hover { background: var(--surface); }
+    .stat-num {
+      font-family: var(--display);
+      font-size: 2.8rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+    }
+
+    /* GAMES / STATS */
+    #games { max-width: 1100px; }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .game-card {
+      background: var(--bg2);
+      padding: 1.8rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s;
+      cursor: default;
+    }
+    .game-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .game-card:hover { background: var(--surface); }
+    .game-card:hover::before { transform: scaleX(1); }
+
+    .game-platform {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .game-title {
+      font-family: var(--display);
+      font-size: 1.6rem;
+      letter-spacing: 0.03em;
+      margin-bottom: 1.2rem;
+    }
+    .game-stats { display: flex; flex-direction: column; gap: 0.7rem; }
+    .game-stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .game-stat-name {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .game-stat-val {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+    .game-stat-bar {
+      height: 2px;
+      background: var(--border);
+      margin-top: 0.25rem;
+      position: relative;
+    }
+    .game-stat-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 1s ease;
+    }
+    .game-badge {
+      position: absolute; top: 1.2rem; right: 1.2rem;
+      font-family: var(--mono); font-size: 0.6rem;
+      padding: 0.25rem 0.6rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .badge-hot { background: rgba(255,62,108,0.15); color: var(--accent2); border: 1px solid rgba(255,62,108,0.3); }
+    .badge-main { background: rgba(255,255,255,0.08); color: var(--accent); border: 1px solid rgba(255,255,255,0.2); }
+
+    /* CLIPS GALLERY */
+    .gallery-note {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+      padding: 1.2rem 1.5rem;
+      border-left: 2px solid var(--accent);
+      background: rgba(255,255,255,0.03);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .gallery-item {
+      aspect-ratio: 16/9;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .gallery-item:first-child { grid-column: span 2; }
+    .gallery-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.75rem;
+      transition: background 0.2s;
+    }
+    .gallery-item:hover .gallery-placeholder { background: rgba(0,229,255,0.04); }
+    .gallery-icon {
+      width: 40px; height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .gallery-item:hover .gallery-icon { border-color: var(--accent); }
+    .gallery-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .gallery-add-hint {
+      font-family: var(--mono); font-size: 0.6rem;
+      color: rgba(0,229,255,0.3); letter-spacing: 0.08em;
+      margin-top: 0.2rem;
+    }
+
+    /* PROJECTS */
+    .projects-grid {
+      display: flex; flex-direction: column; gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .project-row {
+      background: var(--bg2);
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 2rem;
+      transition: background 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .project-row:hover { background: var(--surface); }
+    .project-num {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      min-width: 24px;
+    }
+    .project-info {}
+    .project-name {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.2rem;
+      transition: color 0.2s;
+    }
+    .project-row:hover .project-name { color: var(--accent); }
+    .project-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .project-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      transition: all 0.2s;
+    }
+    .project-row:hover .tag { border-color: rgba(255,255,255,0.3); color: var(--accent); }
+    .project-arrow {
+      font-size: 1rem; color: var(--muted);
+      transition: transform 0.2s, color 0.2s;
+    }
+    .project-row:hover .project-arrow { transform: translateX(4px); color: var(--accent); }
+
+    .projects-note {
+      font-family: var(--mono); font-size: 0.68rem;
+      color: var(--muted); padding: 1rem 2rem;
+      background: var(--bg2); border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    /* SOCIALS */
+    .socials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .social-card {
+      background: var(--bg2);
+      padding: 2rem 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      transition: background 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .social-card::after {
+      content: '↗';
+      position: absolute; top: 1rem; right: 1rem;
+      font-size: 0.9rem; color: var(--muted);
+      transition: all 0.2s;
+    }
+    .social-card:hover { background: var(--surface); }
+    .social-card:hover::after { color: var(--accent); transform: translate(2px, -2px); }
+    .social-icon { font-size: 1.5rem; }
+    .social-platform {
+      font-family: var(--display);
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+    }
+    .social-handle {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .social-card:hover .social-platform { color: var(--accent); }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 100%;
+    }
+    .footer-logo {
+      font-family: var(--display);
+      font-size: 2rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .footer-copy {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .footer-back {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    .footer-back:hover { color: var(--accent); }
+
+    /* DIVIDER */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* SCROLL REVEAL */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero, section { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .gallery-grid { grid-template-columns: 1fr 1fr; }
+      .gallery-item:first-child { grid-column: span 2; }
+      .project-row { grid-template-columns: auto 1fr; gap: 1rem; }
+      .project-tags, .project-arrow { display: none; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">ffub</a>
+    <ul class="nav-links">
+      <li><a href="#about">about</a></li>
+      <li><a href="#games">games</a></li>
+      <li><a href="#clips">clips</a></li>
+      <li><a href="#projects">projects</a></li>
+      <li><a href="#socials">socials</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="grid-bg"></div>
+    <div class="glow-orb"></div>
+    <div class="hero-inner">
+      <p class="hero-tag">// gamer &amp; developer</p>
+      <h1 class="hero-name">ff<span>u</span>b</h1>
+      <p class="hero-sub">PC gamer. Developer. Building things on the internet since before it was cool.</p>
+      <div class="hero-ctas">
+        <a href="#games" class="btn btn-primary">View Stats</a>
+        <a href="#projects" class="btn btn-ghost">See Projects</a>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-line"></div>
+      scroll to explore
+    </div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      online — ffub.lol
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-label">01 — about</div>
+    <h2 class="section-title">Who I Am</h2>
+    <div class="about-grid reveal">
+      <div class="about-text">
+        <p>Hey — I'm <strong>ffub</strong>. I've been gaming competitively on PC for years, with a soft spot for tactical shooters, strategy, and anything with a good story.</p>
+        <p>When I'm not in-game, I'm writing code. I build web projects, experiment with tools, and am always working on something new. This site is both my gaming profile and my dev portfolio.</p>
+        <p>Feel free to hit me up on any of my socials below — always down to talk games, tech, or collab on something interesting.</p>
+      </div>
+      <div class="about-stats">
+        <div class="stat-block">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Hours Logged</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num">PC</div>
+          <div class="stat-label">Primary Platform</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num">?</div>
+          <div class="stat-label">Projects Shipped</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num">ffub</div>
+          <div class="stat-label">Everywhere Online</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- GAMES / STATS -->
+  <section id="games" style="max-width:1100px">
+    <div class="section-label">02 — games & stats</div>
+    <h2 class="section-title">Currently Playing</h2>
+    <div class="games-grid reveal">
+
+      <div class="game-card">
+        <span class="game-badge badge-main">Main</span>
+        <div class="game-platform">PC — FPS</div>
+        <div class="game-title">GAME ONE</div>
+        <div class="game-stats">
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">K/D Ratio</span>
+              <span class="game-stat-val">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="70%"></div></div>
+          </div>
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Win Rate</span>
+              <span class="game-stat-val">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="55%"></div></div>
+          </div>
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Rank</span>
+              <span class="game-stat-val">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <span class="game-badge badge-hot">Hot</span>
+        <div class="game-platform">PC — Strategy</div>
+        <div class="game-title">GAME TWO</div>
+        <div class="game-stats">
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Hours</span>
+              <span class="game-stat-val">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="85%"></div></div>
+          </div>
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Win Rate</span>
+              <span class="game-stat-val">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="60%"></div></div>
+          </div>
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Level</span>
+              <span class="game-stat-val">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <div class="game-platform">PC — RPG</div>
+        <div class="game-title">GAME THREE</div>
+        <div class="game-stats">
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Completion</span>
+              <span class="game-stat-val">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="45%"></div></div>
+          </div>
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">Hours</span>
+              <span class="game-stat-val">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="30%"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);margin-top:1.2rem;padding:0 0.2rem;">
+      ↳ Replace placeholder game names and stats with your actual data — I'll show you how.
+    </p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CLIPS -->
+  <section id="clips">
+    <div class="section-label">03 — clips & screenshots</div>
+    <h2 class="section-title">Gallery</h2>
+    <div class="gallery-note reveal">
+      <strong style="color:var(--accent)">// placeholder gallery</strong> — Once you have clips, drop video files or images into the folder and link them here.
+      You can also embed a YouTube playlist, a Twitch highlights reel, or link to a Medal.tv / Outplayed profile.
+    </div>
+    <div class="gallery-grid reveal">
+      <div class="gallery-item">
+        <div class="gallery-placeholder">
+          <div class="gallery-icon">▶</div>
+          <div class="gallery-label">Best Clip</div>
+          <div class="gallery-add-hint">drop video here</div>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <div class="gallery-placeholder">
+          <div class="gallery-icon">📷</div>
+          <div class="gallery-label">Screenshot</div>
+          <div class="gallery-add-hint">drop image here</div>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <div class="gallery-placeholder">
+          <div class="gallery-icon">▶</div>
+          <div class="gallery-label">Clip 2</div>
+          <div class="gallery-add-hint">drop video here</div>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <div class="gallery-placeholder">
+          <div class="gallery-icon">📷</div>
+          <div class="gallery-label">Screenshot</div>
+          <div class="gallery-add-hint">drop image here</div>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <div class="gallery-placeholder">
+          <div class="gallery-icon">▶</div>
+          <div class="gallery-label">Clip 3</div>
+          <div class="gallery-add-hint">drop video here</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-label">04 — dev projects</div>
+    <h2 class="section-title">Things I've Built</h2>
+    <div class="projects-grid reveal">
+
+      <a href="#" class="project-row">
+        <span class="project-num">01</span>
+        <div class="project-info">
+          <div class="project-name">Project Name</div>
+          <div class="project-desc">Short description of what this does and why you built it</div>
+        </div>
+        <div class="project-tags">
+          <span class="tag">JavaScript</span>
+          <span class="tag">HTML</span>
+        </div>
+        <div class="project-arrow">→</div>
+      </a>
+
+      <a href="#" class="project-row">
+        <span class="project-num">02</span>
+        <div class="project-info">
+          <div class="project-name">Another Project</div>
+          <div class="project-desc">What problem this solves, what you learned building it</div>
+        </div>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">API</span>
+        </div>
+        <div class="project-arrow">→</div>
+      </a>
+
+      <a href="#" class="project-row">
+        <span class="project-num">03</span>
+        <div class="project-info">
+          <div class="project-name">WIP Project</div>
+          <div class="project-desc">Something currently in progress — link to GitHub repo</div>
+        </div>
+        <div class="project-tags">
+          <span class="tag">In Progress</span>
+        </div>
+        <div class="project-arrow">→</div>
+      </a>
+
+      <div class="projects-note">
+        Add your real projects here — link each row to your GitHub repo or live demo.
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SOCIALS -->
+  <section id="socials">
+    <div class="section-label">05 — find me</div>
+    <h2 class="section-title">Socials</h2>
+    <div class="socials-grid reveal">
+
+      <a href="https://twitch.tv/ffub" target="_blank" class="social-card">
+        <div class="social-icon">🎮</div>
+        <div class="social-platform">Twitch</div>
+        <div class="social-handle">twitch.tv/ffub</div>
+      </a>
+
+      <a href="https://discord.com" target="_blank" class="social-card">
+        <div class="social-icon">💬</div>
+        <div class="social-platform">Discord</div>
+        <div class="social-handle">ffub</div>
+      </a>
+
+      <a href="https://github.com/ffub" target="_blank" class="social-card">
+        <div class="social-icon">⌨️</div>
+        <div class="social-platform">GitHub</div>
+        <div class="social-handle">github.com/ffub</div>
+      </a>
+
+      <a href="https://twitter.com/ffub" target="_blank" class="social-card">
+        <div class="social-icon">✦</div>
+        <div class="social-platform">X / Twitter</div>
+        <div class="social-handle">@ffub</div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">ffub</div>
+    <span class="footer-copy">© 2026 — ffub.lol</span>
+    <a href="#" class="footer-back">↑ back to top</a>
+  </footer>
+
+  <script>
+
+
+    // Nav scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(r => observer.observe(r));
+
+    // Animate stat bars on scroll
+    const bars = document.querySelectorAll('.game-stat-fill');
+    const barObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = e.target.dataset.width;
+          if (target) e.target.style.width = target;
+          barObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    bars.forEach(b => barObserver.observe(b));
+  </script>
+</body>
+</html>

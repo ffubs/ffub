@@ -674,87 +674,64 @@
     <h2 class="section-title">Currently Playing</h2>
     <div class="games-grid reveal">
 
-      <div class="game-card">
+      <!-- FACEIT CARD -->
+      <div class="game-card" id="faceit-card">
         <span class="game-badge badge-main">Main</span>
-        <div class="game-platform">PC — FPS</div>
-        <div class="game-title">GAME ONE</div>
-        <div class="game-stats">
+        <div class="game-platform">PC — CS2 / FACEIT</div>
+        <div class="game-title">CS2</div>
+        <div class="game-stats" id="faceit-stats">
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">FACEIT Level</span>
+              <span class="game-stat-val" id="faceit-level">Loading...</span>
+            </div>
+          </div>
+          <div>
+            <div class="game-stat-row">
+              <span class="game-stat-name">ELO</span>
+              <span class="game-stat-val" id="faceit-elo">—</span>
+            </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" id="faceit-elo-bar" style="width:0%"></div></div>
+          </div>
           <div>
             <div class="game-stat-row">
               <span class="game-stat-name">K/D Ratio</span>
-              <span class="game-stat-val">—</span>
+              <span class="game-stat-val" id="faceit-kd">—</span>
             </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="70%"></div></div>
           </div>
           <div>
             <div class="game-stat-row">
               <span class="game-stat-name">Win Rate</span>
-              <span class="game-stat-val">—</span>
+              <span class="game-stat-val" id="faceit-wr">—</span>
             </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="55%"></div></div>
+            <div class="game-stat-bar"><div class="game-stat-fill" id="faceit-wr-bar" style="width:0%"></div></div>
           </div>
           <div>
             <div class="game-stat-row">
-              <span class="game-stat-name">Rank</span>
-              <span class="game-stat-val">—</span>
+              <span class="game-stat-name">Matches</span>
+              <span class="game-stat-val" id="faceit-matches">—</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="game-card">
-        <span class="game-badge badge-hot">Hot</span>
-        <div class="game-platform">PC — Strategy</div>
-        <div class="game-title">GAME TWO</div>
-        <div class="game-stats">
+      <!-- STEAM CARD -->
+      <div class="game-card" id="steam-card">
+        <span class="game-badge badge-hot">Steam</span>
+        <div class="game-platform">PC — Steam Profile</div>
+        <div class="game-title" id="steam-name">Loading...</div>
+        <div class="game-stats" id="steam-stats">
           <div>
             <div class="game-stat-row">
-              <span class="game-stat-name">Hours</span>
-              <span class="game-stat-val">—</span>
-            </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="85%"></div></div>
-          </div>
-          <div>
-            <div class="game-stat-row">
-              <span class="game-stat-name">Win Rate</span>
-              <span class="game-stat-val">—</span>
-            </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="60%"></div></div>
-          </div>
-          <div>
-            <div class="game-stat-row">
-              <span class="game-stat-name">Level</span>
-              <span class="game-stat-val">—</span>
+              <span class="game-stat-name">Status</span>
+              <span class="game-stat-val" id="steam-status">—</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="game-card">
-        <div class="game-platform">PC — RPG</div>
-        <div class="game-title">GAME THREE</div>
-        <div class="game-stats">
-          <div>
-            <div class="game-stat-row">
-              <span class="game-stat-name">Completion</span>
-              <span class="game-stat-val">—</span>
-            </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="45%"></div></div>
-          </div>
-          <div>
-            <div class="game-stat-row">
-              <span class="game-stat-name">Hours</span>
-              <span class="game-stat-val">—</span>
-            </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" style="width:0%" data-width="30%"></div></div>
-          </div>
+          <div id="steam-recent-games"></div>
         </div>
       </div>
 
     </div>
-    <p style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);margin-top:1.2rem;padding:0 0.2rem;">
-      ↳ Replace placeholder game names and stats with your actual data — I'll show you how.
-    </p>
   </section>
 
   <div class="divider"></div>
@@ -942,6 +919,74 @@
       });
     }, { threshold: 0.5 });
     bars.forEach(b => barObserver.observe(b));
+
+    const WORKER = 'https://ffub-api.theomarq.workers.dev';
+
+    // FACEIT
+    async function loadFaceit() {
+      try {
+        const res = await fetch(`${WORKER}/faceit`);
+        const data = await res.json();
+        const cs2 = data.games?.cs2;
+
+        document.getElementById('faceit-level').textContent = `Level ${cs2?.skill_level ?? '—'}`;
+
+        const elo = cs2?.faceit_elo ?? 0;
+        document.getElementById('faceit-elo').textContent = elo || '—';
+        // ELO bar: level 1 = ~100, level 10 = ~3000+, cap at 3000
+        const eloBar = Math.min((elo / 3000) * 100, 100);
+        setTimeout(() => document.getElementById('faceit-elo-bar').style.width = eloBar + '%', 300);
+
+        const stats = data.lifetime;
+        if (stats) {
+          const kd = stats['Average K/D Ratio'] ?? stats['k_d_ratio'] ?? '—';
+          const wr = stats['Win Rate %'] ?? '—';
+          const matches = stats['Matches'] ?? '—';
+          document.getElementById('faceit-kd').textContent = kd;
+          document.getElementById('faceit-wr').textContent = wr ? wr + '%' : '—';
+          document.getElementById('faceit-matches').textContent = matches;
+          setTimeout(() => document.getElementById('faceit-wr-bar').style.width = (parseFloat(wr) || 0) + '%', 300);
+        }
+      } catch(e) {
+        document.getElementById('faceit-level').textContent = 'Unavailable';
+      }
+    }
+
+    // Steam
+    async function loadSteam() {
+      try {
+        const res = await fetch(`${WORKER}/steam`);
+        const data = await res.json();
+        const profile = data.profile;
+        const games = data.games || [];
+
+        document.getElementById('steam-name').textContent = profile?.personaname ?? 'ffub';
+
+        const stateMap = { 0: 'Offline', 1: 'Online', 2: 'Busy', 3: 'Away', 4: 'Snooze', 6: 'In Game' };
+        document.getElementById('steam-status').textContent = stateMap[profile?.personastate] ?? '—';
+
+        const recentEl = document.getElementById('steam-recent-games');
+        if (games.length > 0) {
+          recentEl.innerHTML = games.slice(0, 3).map(g => `
+            <div style="margin-top:0.7rem">
+              <div class="game-stat-row">
+                <span class="game-stat-name">${g.name}</span>
+                <span class="game-stat-val">${Math.round(g.playtime_2weeks / 60)}h recently</span>
+              </div>
+              <div class="game-stat-bar"><div class="game-stat-fill" style="width:${Math.min((g.playtime_2weeks / 1200) * 100, 100)}%"></div></div>
+            </div>
+          `).join('');
+        } else {
+          recentEl.innerHTML = `<div class="game-stat-row" style="margin-top:0.7rem"><span class="game-stat-name">No recent activity</span></div>`;
+        }
+      } catch(e) {
+        document.getElementById('steam-name').textContent = 'ffub';
+        document.getElementById('steam-status').textContent = 'Unavailable';
+      }
+    }
+
+    loadFaceit();
+    loadSteam();
   </script>
 </body>
 </html>

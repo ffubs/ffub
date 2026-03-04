@@ -671,33 +671,54 @@
   <!-- GAMES / STATS -->
   <section id="games" style="max-width:1100px">
     <div class="section-label">02 — games & stats</div>
-    <h2 class="section-title">Currently Playing</h2>
-    <div class="games-grid reveal">
+    <h2 class="section-title">Games</h2>
 
-      <!-- FACEIT CARD -->
-      <div class="game-card" id="faceit-card">
-        <span class="game-badge badge-main">Main</span>
-        <div class="game-platform">PC — CS2 / FACEIT</div>
-        <div class="game-title">CS2</div>
-        <div class="game-stats" id="faceit-stats">
+    <div class="reveal" style="border: 1px solid var(--border); background: var(--bg2); max-width: 600px;">
+
+      <!-- STEAM TOP SECTION -->
+      <div style="padding: 2rem;">
+        <div style="font-family:var(--mono); font-size:0.65rem; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:1.2rem;">Steam</div>
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.8rem;">
+          <img id="steam-avatar" src="" alt="avatar" style="width:56px; height:56px; border:1px solid var(--border); display:none;">
+          <div id="steam-avatar-placeholder" style="width:56px; height:56px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">👤</div>
           <div>
-            <div class="game-stat-row">
-              <span class="game-stat-name">FACEIT Level</span>
-              <span class="game-stat-val" id="faceit-level">Loading...</span>
-            </div>
+            <div id="steam-name" style="font-family:var(--display); font-size:1.8rem; letter-spacing:0.03em; line-height:1;">Loading...</div>
+            <div id="steam-status" style="font-family:var(--mono); font-size:0.65rem; color:var(--muted); margin-top:0.3rem;"></div>
           </div>
-          <div>
-            <div class="game-stat-row">
-              <span class="game-stat-name">ELO</span>
-              <span class="game-stat-val" id="faceit-elo">—</span>
-            </div>
-            <div class="game-stat-bar"><div class="game-stat-fill" id="faceit-elo-bar" style="width:0%"></div></div>
+        </div>
+        <div id="steam-recent-games"></div>
+      </div>
+
+      <!-- DIVIDER -->
+      <div style="height:1px; background:var(--border);"></div>
+
+      <!-- FACEIT BOTTOM SECTION -->
+      <div style="padding: 2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.2rem;">
+          <img src="assets/faceit.png" alt="FACEIT" style="width:22px; height:22px; object-fit:contain;">
+          <div style="font-family:var(--mono); font-size:0.65rem; color:var(--muted); letter-spacing:0.15em; text-transform:uppercase;">FACEIT</div>
+          <div style="font-family:var(--mono); font-size:0.65rem; color:var(--muted);">·</div>
+          <div style="font-family:var(--mono); font-size:0.65rem; color:var(--text);">ffub</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); margin-bottom:1.5rem;">
+          <div style="background:var(--bg2); padding:1rem;">
+            <div style="font-family:var(--display); font-size:2rem; color:#FF5500;" id="faceit-level">—</div>
+            <div style="font-family:var(--mono); font-size:0.6rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:0.2rem;">Level</div>
           </div>
+          <div style="background:var(--bg2); padding:1rem;">
+            <div style="font-family:var(--display); font-size:2rem; color:var(--text);" id="faceit-elo">—</div>
+            <div style="font-family:var(--mono); font-size:0.6rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:0.2rem;">ELO</div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.8rem;">
           <div>
             <div class="game-stat-row">
               <span class="game-stat-name">K/D Ratio</span>
               <span class="game-stat-val" id="faceit-kd">—</span>
             </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" id="faceit-kd-bar" style="width:0%"></div></div>
           </div>
           <div>
             <div class="game-stat-row">
@@ -708,26 +729,17 @@
           </div>
           <div>
             <div class="game-stat-row">
-              <span class="game-stat-name">Matches</span>
+              <span class="game-stat-name">Matches Played</span>
               <span class="game-stat-val" id="faceit-matches">—</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- STEAM CARD -->
-      <div class="game-card" id="steam-card">
-        <span class="game-badge badge-hot">Steam</span>
-        <div class="game-platform">PC — Steam Profile</div>
-        <div class="game-title" id="steam-name">Loading...</div>
-        <div class="game-stats" id="steam-stats">
           <div>
             <div class="game-stat-row">
-              <span class="game-stat-name">Status</span>
-              <span class="game-stat-val" id="steam-status">—</span>
+              <span class="game-stat-name">HS %</span>
+              <span class="game-stat-val" id="faceit-hs">—</span>
             </div>
+            <div class="game-stat-bar"><div class="game-stat-fill" id="faceit-hs-bar" style="width:0%"></div></div>
           </div>
-          <div id="steam-recent-games"></div>
         </div>
       </div>
 
@@ -928,27 +940,32 @@
         const res = await fetch(`${WORKER}/faceit`);
         const data = await res.json();
         const cs2 = data.games?.cs2;
-
-        document.getElementById('faceit-level').textContent = `Level ${cs2?.skill_level ?? '—'}`;
-
-        const elo = cs2?.faceit_elo ?? 0;
-        document.getElementById('faceit-elo').textContent = elo || '—';
-        // ELO bar: level 1 = ~100, level 10 = ~3000+, cap at 3000
-        const eloBar = Math.min((elo / 3000) * 100, 100);
-        setTimeout(() => document.getElementById('faceit-elo-bar').style.width = eloBar + '%', 300);
-
         const stats = data.lifetime;
+
+        const level = cs2?.skill_level ?? '—';
+        const elo = cs2?.faceit_elo ?? '—';
+        document.getElementById('faceit-level').textContent = level;
+        document.getElementById('faceit-elo').textContent = elo;
+
         if (stats) {
-          const kd = stats['Average K/D Ratio'] ?? stats['k_d_ratio'] ?? '—';
+          const kd = stats['Average K/D Ratio'] ?? '—';
           const wr = stats['Win Rate %'] ?? '—';
           const matches = stats['Matches'] ?? '—';
+          const hs = stats['Average Headshots %'] ?? '—';
+
           document.getElementById('faceit-kd').textContent = kd;
-          document.getElementById('faceit-wr').textContent = wr ? wr + '%' : '—';
+          document.getElementById('faceit-wr').textContent = wr !== '—' ? wr + '%' : '—';
           document.getElementById('faceit-matches').textContent = matches;
-          setTimeout(() => document.getElementById('faceit-wr-bar').style.width = (parseFloat(wr) || 0) + '%', 300);
+          document.getElementById('faceit-hs').textContent = hs !== '—' ? hs + '%' : '—';
+
+          setTimeout(() => {
+            document.getElementById('faceit-kd-bar').style.width = Math.min((parseFloat(kd) / 3) * 100, 100) + '%';
+            document.getElementById('faceit-wr-bar').style.width = (parseFloat(wr) || 0) + '%';
+            document.getElementById('faceit-hs-bar').style.width = (parseFloat(hs) || 0) + '%';
+          }, 300);
         }
       } catch(e) {
-        document.getElementById('faceit-level').textContent = 'Unavailable';
+        document.getElementById('faceit-level').textContent = 'N/A';
       }
     }
 
@@ -960,28 +977,36 @@
         const profile = data.profile;
         const games = data.games || [];
 
+        // Avatar
+        if (profile?.avatarfull) {
+          const img = document.getElementById('steam-avatar');
+          const placeholder = document.getElementById('steam-avatar-placeholder');
+          img.src = profile.avatarfull;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+        }
+
         document.getElementById('steam-name').textContent = profile?.personaname ?? 'ffub';
 
-        const stateMap = { 0: 'Offline', 1: 'Online', 2: 'Busy', 3: 'Away', 4: 'Snooze', 6: 'In Game' };
+        const stateMap = { 0: 'Offline', 1: '🟢 Online', 2: 'Busy', 3: '🟡 Away', 4: 'Snooze', 6: '🎮 In Game' };
         document.getElementById('steam-status').textContent = stateMap[profile?.personastate] ?? '—';
 
         const recentEl = document.getElementById('steam-recent-games');
         if (games.length > 0) {
           recentEl.innerHTML = games.slice(0, 3).map(g => `
-            <div style="margin-top:0.7rem">
+            <div style="margin-bottom:0.75rem;">
               <div class="game-stat-row">
                 <span class="game-stat-name">${g.name}</span>
-                <span class="game-stat-val">${Math.round(g.playtime_2weeks / 60)}h recently</span>
+                <span class="game-stat-val">${Math.round(g.playtime_2weeks / 60)}h this week</span>
               </div>
               <div class="game-stat-bar"><div class="game-stat-fill" style="width:${Math.min((g.playtime_2weeks / 1200) * 100, 100)}%"></div></div>
             </div>
           `).join('');
         } else {
-          recentEl.innerHTML = `<div class="game-stat-row" style="margin-top:0.7rem"><span class="game-stat-name">No recent activity</span></div>`;
+          recentEl.innerHTML = `<div style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);">No recent activity</div>`;
         }
       } catch(e) {
         document.getElementById('steam-name').textContent = 'ffub';
-        document.getElementById('steam-status').textContent = 'Unavailable';
       }
     }
 
